@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a2e">
+<link rel="manifest" href="data:application/json,{}">
+<title>Claude Usage Tracker</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #1a1a2e;
+    --card: #16213e;
+    --text: #eee;
+    --muted: #7a8194;
+    --good: #4ecca3;
+    --warn: #f0a500;
+    --bad: #e94560;
+    --claude-tan: #d4a574;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    padding: 1rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .container {
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 1.2rem;
+  }
+
+  header h1 {
+    font-size: 1.2rem;
+    color: var(--claude-tan);
+  }
+
+  header .sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+
+  /* ---- Time Card (the big one) ---- */
+  .time-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 1.2rem;
+    margin-bottom: 0.8rem;
+    text-align: center;
+  }
+
+  .ring-wrap {
+    position: relative;
+    width: 170px;
+    height: 170px;
+    margin: 0 auto 0.8rem;
+  }
+
+  .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: #2a2a4a; stroke-width: 10; }
+  .ring-fg { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease, stroke 0.4s ease; }
+
+  .ring-center {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;
+  }
+  .ring-center .big { font-size: 2.4rem; font-weight: 700; line-height: 1; }
+  .ring-center .unit { font-size: 1rem; color: var(--muted); }
+  .ring-center .label { font-size: 0.7rem; color: var(--muted); margin-top: 0.15rem; }
+
+  .time-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.4rem;
+  }
+
+  .ts {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 0.5rem 0.3rem;
+  }
+  .ts .v { font-size: 1rem; font-weight: 700; }
+  .ts .l { font-size: 0.6rem; color: var(--muted); margin-top: 0.1rem; }
+
+  /* ---- Usage Inputs ---- */
+  .usage-section {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .usage-section h2 {
+    font-size: 0.85rem;
+    margin-bottom: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .usage-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .usage-row:last-child { margin-bottom: 0; }
+
+  .usage-row .name {
+    font-size: 0.8rem;
+    color: var(--muted);
+    min-width: 65px;
+    flex-shrink: 0;
+  }
+
+  .usage-row input {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 0.45rem 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    width: 70px;
+    outline: none;
+  }
+  .usage-row input:focus { border-color: var(--claude-tan); }
+  .usage-row input::placeholder { color: #444; font-weight: 400; }
+
+  .usage-row .pct-label {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .usage-row .verdict {
+    flex: 1;
+    text-align: right;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ---- Pace Card ---- */
+  .pace-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .pace-card h2 {
+    font-size: 0.85rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .pace-item {
+    margin-bottom: 0.8rem;
+  }
+  .pace-item:last-child { margin-bottom: 0; }
+
+  .pace-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .pace-bar-wrap {
+    height: 8px;
+    background: #2a2a4a;
+    border-radius: 4px;
+    position: relative;
+    overflow: visible;
+    margin-bottom: 0.3rem;
+  }
+
+  .pace-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease, background 0.3s ease;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .pace-marker {
+    position: absolute;
+    top: -4px;
+    width: 2px;
+    height: 16px;
+    background: white;
+    border-radius: 1px;
+    transition: left 0.5s ease;
+    z-index: 2;
+  }
+
+  .pace-marker::after {
+    content: 'now';
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.55rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .pace-verdict {
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  /* ---- Suggestion Card ---- */
+  .suggestion {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .suggestion h2 {
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .suggestion .tip {
+    color: var(--muted);
+  }
+
+  .suggestion .highlight {
+    font-weight: 700;
+  }
+
+  /* ---- Settings ---- */
+  details.settings {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  details.settings summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--muted);
+    list-style: none;
+  }
+  details.settings summary::-webkit-details-marker { display: none; }
+
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 0.2rem; }
+  .field.full { grid-column: 1 / -1; }
+
+  .field label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  select, .field input {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.85rem;
+    outline: none;
+    width: 100%;
+  }
+
+  .color-good { color: var(--good); }
+  .color-warn { color: var(--warn); }
+  .color-bad { color: var(--bad); }
+
+  .footer {
+    text-align: center;
+    color: #444;
+    font-size: 0.6rem;
+    padding: 0.5rem 0 1rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Claude Usage Tracker</h1>
+    <div class="sub">Just type in the % you see in Settings &rarr; Usage</div>
+  </header>
+
+  <!-- Time Ring -->
+  <div class="time-card">
+    <div class="ring-wrap">
+      <svg viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="50"/>
+        <circle class="ring-fg" id="ring" cx="60" cy="60" r="50"/>
+      </svg>
+      <div class="ring-center">
+        <div class="big"><span id="timePct">0</span><span class="unit">%</span></div>
+        <div class="label">of week elapsed</div>
+      </div>
+    </div>
+    <div class="time-stats">
+      <div class="ts">
+        <div class="v" id="elapsed">--</div>
+        <div class="l">Elapsed</div>
+      </div>
+      <div class="ts">
+        <div class="v" id="remaining">--</div>
+        <div class="l">Remaining</div>
+      </div>
+      <div class="ts">
+        <div class="v" id="resetIn">--</div>
+        <div class="l">Resets In</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Usage Input -->
+  <div class="usage-section">
+    <h2>Your Usage (from Claude Settings)</h2>
+    <div class="usage-row">
+      <span class="name">All models</span>
+      <input type="number" id="allModelsInput" placeholder="33" min="0" max="100" step="1" inputmode="numeric">
+      <span class="pct-label">%</span>
+      <span class="verdict" id="allModelsVerdict"></span>
+    </div>
+    <div class="usage-row">
+      <span class="name">Sonnet</span>
+      <input type="number" id="sonnetInput" placeholder="27" min="0" max="100" step="1" inputmode="numeric">
+      <span class="pct-label">%</span>
+      <span class="verdict" id="sonnetVerdict"></span>
+    </div>
+  </div>
+
+  <!-- Pace Visualization -->
+  <div class="pace-card" id="paceCard" style="display:none">
+    <h2>Pace Check</h2>
+    <div class="pace-item" id="paceAllModels" style="display:none">
+      <div class="pace-header">
+        <span>All models</span>
+        <span id="paceAllLabel">--</span>
+      </div>
+      <div class="pace-bar-wrap">
+        <div class="pace-fill" id="paceAllFill"></div>
+        <div class="pace-marker" id="paceAllMarker"></div>
+      </div>
+      <div class="pace-verdict" id="paceAllVerdict"></div>
+    </div>
+    <div class="pace-item" id="paceSonnet" style="display:none">
+      <div class="pace-header">
+        <span>Sonnet only</span>
+        <span id="paceSonnetLabel">--</span>
+      </div>
+      <div class="pace-bar-wrap">
+        <div class="pace-fill" id="paceSonnetFill"></div>
+        <div class="pace-marker" id="paceSonnetMarker"></div>
+      </div>
+      <div class="pace-verdict" id="paceSonnetVerdict"></div>
+    </div>
+  </div>
+
+  <!-- Smart Suggestion -->
+  <div class="suggestion" id="suggestion">
+    <h2>Budget Advice</h2>
+    <div id="suggestionText"></div>
+  </div>
+
+  <!-- Settings -->
+  <details class="settings">
+    <summary>Settings</summary>
+    <div class="settings-grid">
+      <div class="field">
+        <label>Reset Day</label>
+        <select id="resetDay">
+          <option value="0">Sunday</option>
+          <option value="1">Monday</option>
+          <option value="2">Tuesday</option>
+          <option value="3">Wednesday</option>
+          <option value="4" selected>Thursday</option>
+          <option value="5">Friday</option>
+          <option value="6">Saturday</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Reset Time</label>
+        <input type="time" id="resetTime" value="22:00">
+      </div>
+    </div>
+  </details>
+
+  <div class="footer">Values saved locally between visits</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const CIRC = 2 * Math.PI * 50;
+const WEEK_MS = 168 * 3600000;
+
+// ---- Persistence ----
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem('claudeUsageTracker'));
+    if (!s) return;
+    if (s.day != null) $('resetDay').value = s.day;
+    if (s.time) $('resetTime').value = s.time;
+    if (s.allModels != null) $('allModelsInput').value = s.allModels;
+    if (s.sonnet != null) $('sonnetInput').value = s.sonnet;
+  } catch {}
+}
+
+function save() {
+  localStorage.setItem('claudeUsageTracker', JSON.stringify({
+    day: $('resetDay').value,
+    time: $('resetTime').value,
+    allModels: $('allModelsInput').value,
+    sonnet: $('sonnetInput').value,
+  }));
+}
+
+// ---- Time math ----
+function getTimePct() {
+  const now = new Date();
+  const resetDay = parseInt($('resetDay').value);
+  const [rh, rm] = $('resetTime').value.split(':').map(Number);
+
+  let d = new Date(now);
+  d.setHours(rh, rm, 0, 0);
+
+  let diff = (d.getDay() - resetDay + 7) % 7;
+  d.setDate(d.getDate() - diff);
+
+  if (d > now) d.setDate(d.getDate() - 7);
+
+  const elapsed = now - d;
+  const pct = Math.min(elapsed / WEEK_MS, 1);
+  const nextReset = new Date(d.getTime() + WEEK_MS);
+
+  return { pct, elapsed, remaining: WEEK_MS - elapsed, nextReset, untilReset: nextReset - now };
+}
+
+function fmtH(ms) {
+  const h = Math.abs(ms) / 3600000;
+  if (h < 1) return Math.round(h * 60) + 'm';
+  const hh = Math.floor(h);
+  const mm = Math.round((h - hh) * 60);
+  return mm > 0 ? `${hh}h${mm}m` : `${hh}h`;
+}
+
+// ---- Pace logic ----
+function getVerdict(usagePct, timePct) {
+  if (timePct <= 0) return { text: '--', cls: '', advice: '' };
+  const ratio = usagePct / timePct;
+  const projected = ratio * 100;
+  const remaining = 100 - usagePct;
+  const timeLeft = 1 - timePct;
+  const dailyBudget = timeLeft > 0 ? (remaining / (timeLeft * 7)).toFixed(1) : '0';
+
+  if (ratio <= 0.6) {
+    return { text: 'Way under', cls: 'color-good', advice: `You can use ~${dailyBudget}% per day and still be fine.`, proj: projected };
+  } else if (ratio <= 0.9) {
+    return { text: 'Under budget', cls: 'color-good', advice: `Comfortable pace. ~${dailyBudget}% per day remaining.`, proj: projected };
+  } else if (ratio <= 1.05) {
+    return { text: 'On track', cls: 'color-good', advice: `Right on pace. Budget ~${dailyBudget}% per day.`, proj: projected };
+  } else if (ratio <= 1.3) {
+    return { text: 'Bit ahead', cls: 'color-warn', advice: `Slow down a little. Only ~${dailyBudget}% per day left.`, proj: projected };
+  } else {
+    return { text: `~${projected.toFixed(0)}% proj.`, cls: 'color-bad', advice: `At this rate you'll hit the limit with ${fmtH((1 - usagePct/100 / ratio) * WEEK_MS)} still left. Only ~${dailyBudget}% per day remains.`, proj: projected };
+  }
+}
+
+// ---- Main update ----
+function update() {
+  const { pct, elapsed, remaining, untilReset } = getTimePct();
+
+  // Ring
+  const ring = $('ring');
+  ring.style.strokeDasharray = CIRC;
+  ring.style.strokeDashoffset = CIRC * (1 - pct);
+  ring.style.stroke = pct < 0.5 ? 'var(--good)' : pct < 0.8 ? 'var(--warn)' : 'var(--bad)';
+
+  $('timePct').textContent = (pct * 100).toFixed(1);
+  $('elapsed').textContent = fmtH(elapsed);
+  $('remaining').textContent = fmtH(remaining);
+  $('resetIn').textContent = fmtH(untilReset);
+
+  // Usage verdicts
+  const allVal = parseFloat($('allModelsInput').value);
+  const sonVal = parseFloat($('sonnetInput').value);
+  const hasAll = !isNaN(allVal);
+  const hasSon = !isNaN(sonVal);
+
+  if (hasAll) {
+    const v = getVerdict(allVal / 100, pct);
+    $('allModelsVerdict').textContent = v.text;
+    $('allModelsVerdict').className = 'verdict ' + v.cls;
+  } else {
+    $('allModelsVerdict').textContent = '';
+  }
+
+  if (hasSon) {
+    const v = getVerdict(sonVal / 100, pct);
+    $('sonnetVerdict').textContent = v.text;
+    $('sonnetVerdict').className = 'verdict ' + v.cls;
+  } else {
+    $('sonnetVerdict').textContent = '';
+  }
+
+  // Pace bars
+  const showPace = hasAll || hasSon;
+  $('paceCard').style.display = showPace ? '' : 'none';
+
+  if (hasAll) {
+    $('paceAllModels').style.display = '';
+    renderPace('paceAll', allVal, pct);
+  } else {
+    $('paceAllModels').style.display = 'none';
+  }
+
+  if (hasSon) {
+    $('paceSonnet').style.display = '';
+    renderPace('paceSonnet', sonVal, pct);
+  } else {
+    $('paceSonnet').style.display = 'none';
+  }
+
+  // Suggestion
+  updateSuggestion(hasAll ? allVal : null, hasSon ? sonVal : null, pct);
+}
+
+function renderPace(prefix, usagePctNum, timePct) {
+  const usagePct = usagePctNum / 100;
+  const fill = $(prefix + 'Fill');
+  const marker = $(prefix + 'Marker');
+  const label = $(prefix + 'Label');
+  const verdict = $(prefix + 'Verdict');
+
+  fill.style.width = Math.min(usagePctNum, 100) + '%';
+  marker.style.left = Math.min(timePct * 100, 100) + '%';
+
+  const ratio = timePct > 0 ? usagePct / timePct : 0;
+  fill.style.background = ratio <= 1 ? 'var(--good)' : ratio <= 1.3 ? 'var(--warn)' : 'var(--bad)';
+
+  label.textContent = usagePctNum + '% used';
+
+  const v = getVerdict(usagePct, timePct);
+  verdict.textContent = v.advice;
+  verdict.className = 'pace-verdict ' + v.cls;
+}
+
+function updateSuggestion(allVal, sonVal, timePct) {
+  const box = $('suggestion');
+  const txt = $('suggestionText');
+
+  if (allVal == null && sonVal == null) {
+    box.style.display = 'none';
+    return;
+  }
+
+  box.style.display = '';
+  const lines = [];
+  const daysLeft = ((1 - timePct) * 7);
+  const daysLeftStr = daysLeft < 1 ? `${Math.round(daysLeft * 24)} hours` : `${daysLeft.toFixed(1)} days`;
+
+  if (allVal != null) {
+    const remainAll = 100 - allVal;
+    const perDay = daysLeft > 0 ? (remainAll / daysLeft).toFixed(1) : 0;
+    lines.push(`<span class="tip"><strong>All models:</strong> ${remainAll.toFixed(0)}% remaining over ${daysLeftStr} = <span class="highlight">${perDay}% per day</span></span>`);
+  }
+
+  if (sonVal != null) {
+    const remainSon = 100 - sonVal;
+    const perDay = daysLeft > 0 ? (remainSon / daysLeft).toFixed(1) : 0;
+    lines.push(`<span class="tip"><strong>Sonnet:</strong> ${remainSon.toFixed(0)}% remaining over ${daysLeftStr} = <span class="highlight">${perDay}% per day</span></span>`);
+  }
+
+  txt.innerHTML = lines.join('<br>');
+}
+
+// ---- Events ----
+['resetDay', 'resetTime'].forEach(id => {
+  $(id).addEventListener('change', () => { save(); update(); });
+});
+['allModelsInput', 'sonnetInput'].forEach(id => {
+  $(id).addEventListener('input', () => { save(); update(); });
+});
+
+// ---- Init ----
+load();
+update();
+setInterval(update, 10000);
+</script>
+</body>
+</html>
