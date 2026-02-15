@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -12,7 +12,8 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  :root {
+  /* ---- Theme Variables ---- */
+  :root[data-theme="dark"] {
     --bg: #1a1a2e;
     --card: #16213e;
     --text: #eee;
@@ -21,6 +22,27 @@
     --warn: #f0a500;
     --bad: #e94560;
     --claude-tan: #d4a574;
+    --input-bg: #1a1a2e;
+    --input-border: #333;
+    --ring-track: #2a2a4a;
+    --chart-grid: #2a2a4a;
+    --toggle-bg: #2a2a4a;
+  }
+
+  :root[data-theme="light"] {
+    --bg: #f5f0eb;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --muted: #7a8194;
+    --good: #2a9d6e;
+    --warn: #c88400;
+    --bad: #c9324a;
+    --claude-tan: #b07d4f;
+    --input-bg: #f0ebe5;
+    --input-border: #d0c8be;
+    --ring-track: #e0d8d0;
+    --chart-grid: #e0d8d0;
+    --toggle-bg: #d0c8be;
   }
 
   body {
@@ -30,6 +52,7 @@
     min-height: 100dvh;
     padding: 1rem;
     -webkit-tap-highlight-color: transparent;
+    transition: background 0.3s ease, color 0.3s ease;
   }
 
   .container {
@@ -40,6 +63,7 @@
   header {
     text-align: center;
     margin-bottom: 1.2rem;
+    position: relative;
   }
 
   header h1 {
@@ -53,13 +77,71 @@
     margin-top: 0.2rem;
   }
 
-  /* ---- Time Card (the big one) ---- */
+  /* ---- Theme Toggle ---- */
+  .theme-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--toggle-bg);
+    border: none;
+    border-radius: 20px;
+    width: 44px;
+    height: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    transition: background 0.3s ease;
+  }
+
+  .theme-toggle .knob {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--claude-tan);
+    transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+  }
+
+  [data-theme="light"] .theme-toggle .knob {
+    transform: translateX(20px);
+  }
+
+  /* ---- Time Display Toggle ---- */
+  .time-toggle {
+    display: inline-flex;
+    background: var(--toggle-bg);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+    font-size: 0.65rem;
+  }
+
+  .time-toggle button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .time-toggle button.active {
+    background: var(--claude-tan);
+    color: #fff;
+  }
+
+  /* ---- Time Card ---- */
   .time-card {
     background: var(--card);
     border-radius: 16px;
     padding: 1.2rem;
     margin-bottom: 0.8rem;
     text-align: center;
+    transition: background 0.3s ease;
   }
 
   .ring-wrap {
@@ -70,7 +152,7 @@
   }
 
   .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  .ring-bg { fill: none; stroke: #2a2a4a; stroke-width: 10; }
+  .ring-bg { fill: none; stroke: var(--ring-track); stroke-width: 10; }
   .ring-fg { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease, stroke 0.4s ease; }
 
   .ring-center {
@@ -90,6 +172,7 @@
     background: var(--bg);
     border-radius: 8px;
     padding: 0.5rem 0.3rem;
+    transition: background 0.3s ease;
   }
   .ts .v { font-size: 1rem; font-weight: 700; }
   .ts .l { font-size: 0.6rem; color: var(--muted); margin-top: 0.1rem; }
@@ -100,6 +183,7 @@
     border-radius: 14px;
     padding: 1rem;
     margin-bottom: 0.8rem;
+    transition: background 0.3s ease;
   }
 
   .usage-section h2 {
@@ -126,10 +210,10 @@
     flex-shrink: 0;
   }
 
-  .usage-row input {
-    background: var(--bg);
+  .usage-row input[type="number"] {
+    background: var(--input-bg);
     color: var(--text);
-    border: 1px solid #333;
+    border: 1px solid var(--input-border);
     border-radius: 8px;
     padding: 0.45rem 0.5rem;
     font-size: 1.1rem;
@@ -137,9 +221,10 @@
     text-align: center;
     width: 70px;
     outline: none;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
   }
   .usage-row input:focus { border-color: var(--claude-tan); }
-  .usage-row input::placeholder { color: #444; font-weight: 400; }
+  .usage-row input::placeholder { color: var(--muted); opacity: 0.5; font-weight: 400; }
 
   .usage-row .pct-label {
     font-size: 0.85rem;
@@ -160,16 +245,12 @@
     border-radius: 14px;
     padding: 1rem;
     margin-bottom: 0.8rem;
+    transition: background 0.3s ease;
   }
 
-  .pace-card h2 {
-    font-size: 0.85rem;
-    margin-bottom: 0.6rem;
-  }
+  .pace-card h2 { font-size: 0.85rem; margin-bottom: 0.6rem; }
 
-  .pace-item {
-    margin-bottom: 0.8rem;
-  }
+  .pace-item { margin-bottom: 0.8rem; }
   .pace-item:last-child { margin-bottom: 0; }
 
   .pace-header {
@@ -182,7 +263,7 @@
 
   .pace-bar-wrap {
     height: 8px;
-    background: #2a2a4a;
+    background: var(--ring-track);
     border-radius: 4px;
     position: relative;
     overflow: visible;
@@ -194,8 +275,7 @@
     border-radius: 4px;
     transition: width 0.5s ease, background 0.3s ease;
     position: absolute;
-    left: 0;
-    top: 0;
+    left: 0; top: 0;
   }
 
   .pace-marker {
@@ -203,7 +283,7 @@
     top: -4px;
     width: 2px;
     height: 16px;
-    background: white;
+    background: var(--text);
     border-radius: 1px;
     transition: left 0.5s ease;
     z-index: 2;
@@ -220,9 +300,40 @@
     white-space: nowrap;
   }
 
-  .pace-verdict {
-    font-size: 0.8rem;
-    font-weight: 500;
+  .pace-verdict { font-size: 0.8rem; font-weight: 500; }
+
+  /* ---- Predictor Card ---- */
+  .predictor-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    display: none;
+    transition: background 0.3s ease;
+  }
+
+  .predictor-card h2 { font-size: 0.85rem; margin-bottom: 0.6rem; }
+
+  .predictor-chart {
+    width: 100%;
+    height: 140px;
+    position: relative;
+  }
+
+  .predictor-chart canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .predictor-info {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+    text-align: center;
+  }
+
+  .predictor-info strong {
+    color: var(--text);
   }
 
   /* ---- Suggestion Card ---- */
@@ -234,36 +345,127 @@
     font-size: 0.82rem;
     line-height: 1.5;
     display: none;
+    transition: background 0.3s ease;
   }
 
-  .suggestion h2 {
+  .suggestion h2 { font-size: 0.85rem; margin-bottom: 0.4rem; }
+  .suggestion .tip { color: var(--muted); }
+  .suggestion .highlight { font-weight: 700; }
+
+  /* ---- Alert Card ---- */
+  .alert-banner {
+    background: var(--bad);
+    color: #fff;
+    border-radius: 14px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.82rem;
+    display: none;
+    text-align: center;
+    font-weight: 600;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+
+  /* ---- History Card ---- */
+  .history-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    display: none;
+    transition: background 0.3s ease;
+  }
+
+  .history-card h2 {
     font-size: 0.85rem;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.6rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  .suggestion .tip {
+  .history-card .clear-btn {
+    background: none;
+    border: 1px solid var(--input-border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.65rem;
+    cursor: pointer;
+  }
+  .history-card .clear-btn:hover { border-color: var(--bad); color: var(--bad); }
+
+  .history-chart {
+    width: 100%;
+    height: 120px;
+    position: relative;
+  }
+
+  .history-chart canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .history-entries {
+    margin-top: 0.5rem;
+    max-height: 140px;
+    overflow-y: auto;
+    font-size: 0.7rem;
+  }
+
+  .history-entry {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid var(--ring-track);
     color: var(--muted);
   }
 
-  .suggestion .highlight {
-    font-weight: 700;
+  .history-entry:last-child { border-bottom: none; }
+
+  .history-toggle {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    justify-content: center;
   }
 
-  /* ---- Settings ---- */
-  details.settings {
+  .history-toggle button {
+    background: var(--toggle-bg);
+    border: none;
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.65rem;
+    cursor: pointer;
+  }
+
+  .history-toggle button.active {
+    background: var(--claude-tan);
+    color: #fff;
+  }
+
+  /* ---- Collapsible Sections ---- */
+  details {
     background: var(--card);
     border-radius: 12px;
     padding: 0.8rem 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
+    transition: background 0.3s ease;
   }
 
-  details.settings summary {
+  details summary {
     cursor: pointer;
     font-size: 0.8rem;
     color: var(--muted);
     list-style: none;
   }
-  details.settings summary::-webkit-details-marker { display: none; }
+  details summary::-webkit-details-marker { display: none; }
 
   .settings-grid {
     display: grid;
@@ -283,36 +485,129 @@
   }
 
   select, .field input {
-    background: var(--bg);
+    background: var(--input-bg);
     color: var(--text);
-    border: 1px solid #333;
+    border: 1px solid var(--input-border);
     border-radius: 6px;
     padding: 0.4rem 0.5rem;
     font-size: 0.85rem;
     outline: none;
     width: 100%;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
   }
 
-  .color-good { color: var(--good); }
-  .color-warn { color: var(--warn); }
-  .color-bad { color: var(--bad); }
+  .field input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.4rem;
+  }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.4rem;
+  }
+
+  .checkbox-row label {
+    text-transform: none;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+
+  /* ---- Alert Settings ---- */
+  .alert-settings {
+    margin-top: 0.6rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--ring-track);
+  }
+
+  .alert-settings h3 {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .threshold-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.3rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .threshold-row input {
+    width: 55px;
+    text-align: center;
+    padding: 0.25rem;
+    font-size: 0.8rem;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    outline: none;
+  }
+
+  /* ---- Export/Import ---- */
+  .export-section {
+    margin-top: 0.6rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--ring-track);
+  }
+
+  .export-section h3 {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .export-btns {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .export-btns button {
+    flex: 1;
+    background: var(--toggle-bg);
+    border: none;
+    color: var(--text);
+    border-radius: 6px;
+    padding: 0.4rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .export-btns button:hover { background: var(--claude-tan); color: #fff; }
+
+  .export-textarea {
+    width: 100%;
+    margin-top: 0.4rem;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    padding: 0.4rem;
+    font-size: 0.7rem;
+    font-family: monospace;
+    resize: vertical;
+    min-height: 50px;
+    display: none;
+    outline: none;
+  }
+
+  .export-msg {
+    font-size: 0.7rem;
+    color: var(--good);
+    margin-top: 0.3rem;
+    display: none;
+    text-align: center;
+  }
 
   /* ---- How It Works ---- */
-  details.how-it-works {
-    background: var(--card);
-    border-radius: 12px;
-    padding: 0.8rem 1rem;
-    margin-bottom: 1rem;
-  }
-
-  details.how-it-works summary {
-    cursor: pointer;
-    font-size: 0.8rem;
-    color: var(--muted);
-    list-style: none;
-  }
-  details.how-it-works summary::-webkit-details-marker { display: none; }
-
   .how-steps {
     margin-top: 0.6rem;
     font-size: 0.78rem;
@@ -320,17 +615,9 @@
     line-height: 1.6;
   }
 
-  .how-steps ol {
-    padding-left: 1.2rem;
-  }
-
-  .how-steps li {
-    margin-bottom: 0.3rem;
-  }
-
-  .how-steps strong {
-    color: var(--text);
-  }
+  .how-steps ol { padding-left: 1.2rem; }
+  .how-steps li { margin-bottom: 0.3rem; }
+  .how-steps strong { color: var(--text); }
 
   .how-steps .explainer {
     margin-top: 0.5rem;
@@ -339,20 +626,23 @@
     border-radius: 6px;
     font-size: 0.72rem;
     line-height: 1.5;
+    transition: background 0.3s ease;
   }
+
+  .color-good { color: var(--good); }
+  .color-warn { color: var(--warn); }
+  .color-bad { color: var(--bad); }
 
   .footer {
     text-align: center;
-    color: #444;
+    color: var(--muted);
+    opacity: 0.5;
     font-size: 0.6rem;
     padding: 0.5rem 0 1rem;
   }
 
-  .footer a {
-    color: #555;
-    text-decoration: none;
-  }
-  .footer a:hover { color: var(--muted); }
+  .footer a { color: var(--muted); text-decoration: none; }
+  .footer a:hover { opacity: 1; }
 </style>
 </head>
 <body>
@@ -361,10 +651,17 @@
   <header>
     <h1>Will I Last?</h1>
     <div class="sub">Claude weekly usage pace checker</div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle light/dark mode">
+      <div class="knob" id="themeKnob"></div>
+    </button>
   </header>
 
   <!-- Time Ring -->
   <div class="time-card">
+    <div class="time-toggle">
+      <button id="btnHours" class="active">Hours</button>
+      <button id="btnDays">Days</button>
+    </div>
     <div class="ring-wrap">
       <svg viewBox="0 0 120 120">
         <circle class="ring-bg" cx="60" cy="60" r="50"/>
@@ -390,6 +687,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Alert Banner -->
+  <div class="alert-banner" id="alertBanner"></div>
 
   <!-- Usage Input -->
   <div class="usage-section">
@@ -435,10 +735,35 @@
     </div>
   </div>
 
+  <!-- Predictor Chart -->
+  <div class="predictor-card" id="predictorCard">
+    <h2>Pace Predictor</h2>
+    <div class="predictor-chart">
+      <canvas id="predictorCanvas"></canvas>
+    </div>
+    <div class="predictor-info" id="predictorInfo"></div>
+  </div>
+
   <!-- Smart Suggestion -->
   <div class="suggestion" id="suggestion">
     <h2>Daily Budget</h2>
     <div id="suggestionText"></div>
+  </div>
+
+  <!-- History -->
+  <div class="history-card" id="historyCard">
+    <h2>
+      Usage History
+      <button class="clear-btn" id="clearHistoryBtn">Clear</button>
+    </h2>
+    <div class="history-chart">
+      <canvas id="historyCanvas"></canvas>
+    </div>
+    <div class="history-toggle">
+      <button id="histChartBtn" class="active">Chart</button>
+      <button id="histListBtn">List</button>
+    </div>
+    <div class="history-entries" id="historyEntries" style="display:none"></div>
   </div>
 
   <!-- How It Works -->
@@ -477,10 +802,36 @@
         <input type="time" id="resetTime" value="22:00">
       </div>
     </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="trackHistory" checked>
+      <label for="trackHistory">Track usage history (saved locally)</label>
+    </div>
+
+    <!-- Alert Thresholds -->
+    <div class="alert-settings">
+      <h3>Alert Thresholds</h3>
+      <div class="threshold-row">
+        <span>Warn when projected usage exceeds</span>
+        <input type="number" id="alertThreshold" value="90" min="50" max="100" step="5">
+        <span>%</span>
+      </div>
+    </div>
+
+    <!-- Export/Import -->
+    <div class="export-section">
+      <h3>Export / Import</h3>
+      <div class="export-btns">
+        <button id="exportBtn">Export Settings</button>
+        <button id="importBtn">Import Settings</button>
+      </div>
+      <textarea class="export-textarea" id="exportTextarea" placeholder="Paste exported settings here..."></textarea>
+      <div class="export-msg" id="exportMsg"></div>
+    </div>
   </details>
 
   <div class="footer">
-    No data leaves your browser &middot; <a href="https://github.com/dan0dandeleon11/claude-usage-tracker">GitHub</a>
+    No data leaves your browser &middot; <a href="https://github.com/dan0dandeleon11/will-i-last">GitHub</a>
   </div>
 </div>
 
@@ -488,16 +839,61 @@
 const $ = id => document.getElementById(id);
 const CIRC = 2 * Math.PI * 50;
 const WEEK_MS = 168 * 3600000;
+let timeMode = 'hours'; // 'hours' or 'days'
 
-// ---- Persistence ----
+// =============================================
+// THEME
+// =============================================
+function loadTheme() {
+  const t = localStorage.getItem('willILast_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+}
+
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('willILast_theme', next);
+}
+
+$('themeToggle').addEventListener('click', toggleTheme);
+
+// =============================================
+// TIME DISPLAY TOGGLE
+// =============================================
+$('btnHours').addEventListener('click', () => {
+  timeMode = 'hours';
+  $('btnHours').classList.add('active');
+  $('btnDays').classList.remove('active');
+  update();
+});
+$('btnDays').addEventListener('click', () => {
+  timeMode = 'days';
+  $('btnDays').classList.add('active');
+  $('btnHours').classList.remove('active');
+  update();
+});
+
+// =============================================
+// PERSISTENCE
+// =============================================
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem('willILast'));
     if (!s) return;
     if (s.day != null) $('resetDay').value = s.day;
     if (s.time) $('resetTime').value = s.time;
-    if (s.allModels != null) $('allModelsInput').value = s.allModels;
-    if (s.sonnet != null) $('sonnetInput').value = s.sonnet;
+    if (s.allModels != null && s.allModels !== '') $('allModelsInput').value = s.allModels;
+    if (s.sonnet != null && s.sonnet !== '') $('sonnetInput').value = s.sonnet;
+    if (s.trackHistory != null) $('trackHistory').checked = s.trackHistory;
+    if (s.alertThreshold != null) $('alertThreshold').value = s.alertThreshold;
+    if (s.timeMode) {
+      timeMode = s.timeMode;
+      if (timeMode === 'days') {
+        $('btnDays').classList.add('active');
+        $('btnHours').classList.remove('active');
+      }
+    }
   } catch {}
 }
 
@@ -507,10 +903,54 @@ function save() {
     time: $('resetTime').value,
     allModels: $('allModelsInput').value,
     sonnet: $('sonnetInput').value,
+    trackHistory: $('trackHistory').checked,
+    alertThreshold: $('alertThreshold').value,
+    timeMode: timeMode,
   }));
 }
 
-// ---- Time math ----
+// =============================================
+// HISTORY
+// =============================================
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem('willILast_history')) || [];
+  } catch { return []; }
+}
+
+function saveHistory(entry) {
+  if (!$('trackHistory').checked) return;
+  const hist = getHistory();
+  // Don't save duplicate entries within 30 minutes
+  const last = hist[hist.length - 1];
+  if (last && (Date.now() - last.ts) < 30 * 60000 &&
+      last.all === entry.all && last.son === entry.son) return;
+  hist.push(entry);
+  // Keep max 200 entries
+  if (hist.length > 200) hist.splice(0, hist.length - 200);
+  localStorage.setItem('willILast_history', JSON.stringify(hist));
+}
+
+function logUsage() {
+  const allVal = parseFloat($('allModelsInput').value);
+  const sonVal = parseFloat($('sonnetInput').value);
+  if (isNaN(allVal) && isNaN(sonVal)) return;
+  saveHistory({
+    ts: Date.now(),
+    all: isNaN(allVal) ? null : allVal,
+    son: isNaN(sonVal) ? null : sonVal,
+    timePct: parseFloat(getTimePct().pct.toFixed(4)),
+  });
+}
+
+$('clearHistoryBtn').addEventListener('click', () => {
+  localStorage.removeItem('willILast_history');
+  renderHistory();
+});
+
+// =============================================
+// TIME MATH
+// =============================================
 function getTimePct() {
   const now = new Date();
   const resetDay = parseInt($('resetDay').value);
@@ -528,20 +968,29 @@ function getTimePct() {
   const pct = Math.min(elapsed / WEEK_MS, 1);
   const nextReset = new Date(d.getTime() + WEEK_MS);
 
-  return { pct, elapsed, remaining: WEEK_MS - elapsed, nextReset, untilReset: nextReset - now };
+  return { pct, elapsed, remaining: WEEK_MS - elapsed, nextReset, untilReset: nextReset - now, lastReset: d };
 }
 
-function fmtH(ms) {
-  const h = Math.abs(ms) / 3600000;
-  if (h < 1) return Math.round(h * 60) + 'm';
-  const hh = Math.floor(h);
-  const mm = Math.round((h - hh) * 60);
-  return mm > 0 ? `${hh}h${mm}m` : `${hh}h`;
+function fmtTime(ms) {
+  const totalH = Math.abs(ms) / 3600000;
+  if (timeMode === 'days') {
+    const d = Math.floor(totalH / 24);
+    const h = Math.round(totalH % 24);
+    if (d === 0) return `${h}h`;
+    return h > 0 ? `${d}d ${h}h` : `${d}d`;
+  } else {
+    if (totalH < 1) return Math.round(totalH * 60) + 'm';
+    const hh = Math.floor(totalH);
+    const mm = Math.round((totalH - hh) * 60);
+    return mm > 0 ? `${hh}h${mm}m` : `${hh}h`;
+  }
 }
 
-// ---- Pace logic ----
+// =============================================
+// PACE LOGIC
+// =============================================
 function getVerdict(usagePct, timePct) {
-  if (timePct <= 0) return { text: '--', cls: '', advice: '' };
+  if (timePct <= 0) return { text: '--', cls: '', advice: '', ratio: 0 };
   const ratio = usagePct / timePct;
   const projected = ratio * 100;
   const remaining = 100 - usagePct;
@@ -549,19 +998,379 @@ function getVerdict(usagePct, timePct) {
   const dailyBudget = timeLeft > 0 ? (remaining / (timeLeft * 7)).toFixed(1) : '0';
 
   if (ratio <= 0.6) {
-    return { text: 'Way under', cls: 'color-good', advice: `You can use ~${dailyBudget}% per day and still be fine.`, proj: projected };
+    return { text: 'Way under', cls: 'color-good', advice: `You can use ~${dailyBudget}% per day and still be fine.`, proj: projected, ratio };
   } else if (ratio <= 0.9) {
-    return { text: 'Under budget', cls: 'color-good', advice: `Comfortable pace. ~${dailyBudget}% per day remaining.`, proj: projected };
+    return { text: 'Under budget', cls: 'color-good', advice: `Comfortable pace. ~${dailyBudget}% per day remaining.`, proj: projected, ratio };
   } else if (ratio <= 1.05) {
-    return { text: 'On track', cls: 'color-good', advice: `Right on pace. Budget ~${dailyBudget}% per day.`, proj: projected };
+    return { text: 'On track', cls: 'color-good', advice: `Right on pace. Budget ~${dailyBudget}% per day.`, proj: projected, ratio };
   } else if (ratio <= 1.3) {
-    return { text: 'Bit ahead', cls: 'color-warn', advice: `Slow down a little. Only ~${dailyBudget}% per day left.`, proj: projected };
+    return { text: 'Bit ahead', cls: 'color-warn', advice: `Slow down a little. Only ~${dailyBudget}% per day left.`, proj: projected, ratio };
   } else {
-    return { text: `~${projected.toFixed(0)}% proj.`, cls: 'color-bad', advice: `At this rate you'll hit the limit with ${fmtH((1 - usagePct/100 / ratio) * WEEK_MS)} still left. Only ~${dailyBudget}% per day remains.`, proj: projected };
+    return { text: `~${projected.toFixed(0)}% proj.`, cls: 'color-bad', advice: `At this rate you'll hit the limit with ${fmtTime((1 - usagePct / 100 / ratio) * WEEK_MS)} still left. Only ~${dailyBudget}% per day remains.`, proj: projected, ratio };
   }
 }
 
-// ---- Main update ----
+// =============================================
+// PREDICTOR CHART (Canvas)
+// =============================================
+function renderPredictor(allVal, sonVal, timePct) {
+  const card = $('predictorCard');
+  const canvas = $('predictorCanvas');
+  const info = $('predictorInfo');
+
+  const hasAll = allVal != null;
+  const hasSon = sonVal != null;
+  if (!hasAll && !hasSon) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width;
+  const H = rect.height;
+  const pad = { l: 30, r: 10, t: 10, b: 20 };
+  const cW = W - pad.l - pad.r;
+  const cH = H - pad.t - pad.b;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  const style = getComputedStyle(document.documentElement);
+  const gridColor = style.getPropertyValue('--chart-grid').trim();
+  const mutedColor = style.getPropertyValue('--muted').trim();
+  const goodColor = style.getPropertyValue('--good').trim();
+  const warnColor = style.getPropertyValue('--warn').trim();
+  const badColor = style.getPropertyValue('--bad').trim();
+  const textColor = style.getPropertyValue('--text').trim();
+
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (cH / 4) * i;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+  }
+
+  // Y axis labels
+  ctx.fillStyle = mutedColor;
+  ctx.font = '9px system-ui';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (cH / 4) * i;
+    ctx.fillText((100 - i * 25) + '%', pad.l - 4, y + 3);
+  }
+
+  // X axis - days
+  const dayLabels = ['Now', '', '', '', '', '', '', 'Reset'];
+  ctx.textAlign = 'center';
+  for (let i = 0; i < 8; i++) {
+    if (dayLabels[i]) {
+      const x = pad.l + (cW / 7) * i;
+      ctx.fillText(dayLabels[i], x, H - 4);
+    }
+  }
+
+  // 100% danger line
+  const y100 = pad.t;
+  ctx.strokeStyle = badColor;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(pad.l, y100); ctx.lineTo(W - pad.r, y100); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // "Now" vertical line
+  const xNow = pad.l + cW * timePct;
+  ctx.strokeStyle = mutedColor;
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath(); ctx.moveTo(xNow, pad.t); ctx.lineTo(xNow, pad.t + cH); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw projection lines
+  function drawProjection(val, color, label) {
+    const yStart = pad.t + cH * (1 - val / 100);
+    const rate = timePct > 0 ? val / timePct : 0;
+    const endVal = Math.min(rate * 100, 150); // cap at 150 for visual
+    const yEnd = pad.t + cH * (1 - Math.min(endVal, 100) / 100);
+
+    // Actual usage dot
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(xNow, yStart, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Projection line
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(xNow, yStart);
+    ctx.lineTo(pad.l + cW, yEnd);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label
+    ctx.fillStyle = color;
+    ctx.font = 'bold 9px system-ui';
+    ctx.textAlign = 'left';
+    ctx.fillText(label, xNow + 6, yStart - 6);
+  }
+
+  if (hasAll) drawProjection(allVal, '#5b9cf6', 'All');
+  if (hasSon) drawProjection(sonVal, '#c084fc', 'Sonnet');
+
+  // Ideal pace line (gray diagonal)
+  ctx.strokeStyle = mutedColor;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.3;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t + cH);
+  ctx.lineTo(pad.l + cW, pad.t);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Info text
+  const lines = [];
+  if (hasAll) {
+    const v = getVerdict(allVal / 100, timePct);
+    const proj = Math.min(v.proj, 999).toFixed(0);
+    const hitDay = v.ratio > 0 ? (1 / v.ratio) * 7 : 999;
+    if (v.ratio > 1) {
+      lines.push(`All models: hits 100% in <strong>${fmtTime(hitDay * 24 * 3600000)}</strong> (day ${hitDay.toFixed(1)})`);
+    } else {
+      lines.push(`All models: projected <strong>${proj}%</strong> by reset`);
+    }
+  }
+  if (hasSon) {
+    const v = getVerdict(sonVal / 100, timePct);
+    const proj = Math.min(v.proj, 999).toFixed(0);
+    const hitDay = v.ratio > 0 ? (1 / v.ratio) * 7 : 999;
+    if (v.ratio > 1) {
+      lines.push(`Sonnet: hits 100% in <strong>${fmtTime(hitDay * 24 * 3600000)}</strong> (day ${hitDay.toFixed(1)})`);
+    } else {
+      lines.push(`Sonnet: projected <strong>${proj}%</strong> by reset`);
+    }
+  }
+  info.innerHTML = lines.join('<br>');
+}
+
+// =============================================
+// HISTORY CHART (Canvas)
+// =============================================
+function renderHistory() {
+  const hist = getHistory();
+  const card = $('historyCard');
+
+  if (hist.length < 2) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  // Chart
+  const canvas = $('historyCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width;
+  const H = rect.height;
+  const pad = { l: 30, r: 10, t: 10, b: 20 };
+  const cW = W - pad.l - pad.r;
+  const cH = H - pad.t - pad.b;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const style = getComputedStyle(document.documentElement);
+  const gridColor = style.getPropertyValue('--chart-grid').trim();
+  const mutedColor = style.getPropertyValue('--muted').trim();
+
+  // Grid
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (cH / 4) * i;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+  }
+
+  ctx.fillStyle = mutedColor;
+  ctx.font = '9px system-ui';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (cH / 4) * i;
+    ctx.fillText((100 - i * 25) + '%', pad.l - 4, y + 3);
+  }
+
+  // X axis - timestamps
+  const tMin = hist[0].ts;
+  const tMax = hist[hist.length - 1].ts;
+  const tRange = tMax - tMin || 1;
+
+  function drawLine(data, color) {
+    if (data.length < 2) return;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    data.forEach((p, i) => {
+      const x = pad.l + ((p.ts - tMin) / tRange) * cW;
+      const y = pad.t + cH * (1 - (p.val || 0) / 100);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // dots
+    ctx.fillStyle = color;
+    data.forEach(p => {
+      const x = pad.l + ((p.ts - tMin) / tRange) * cW;
+      const y = pad.t + cH * (1 - (p.val || 0) / 100);
+      ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+    });
+  }
+
+  const allData = hist.filter(h => h.all != null).map(h => ({ ts: h.ts, val: h.all }));
+  const sonData = hist.filter(h => h.son != null).map(h => ({ ts: h.ts, val: h.son }));
+
+  drawLine(allData, '#5b9cf6');
+  drawLine(sonData, '#c084fc');
+
+  // X axis date labels
+  ctx.fillStyle = mutedColor;
+  ctx.font = '8px system-ui';
+  ctx.textAlign = 'center';
+  const first = new Date(tMin);
+  const last = new Date(tMax);
+  ctx.fillText(first.toLocaleDateString([], { month: 'short', day: 'numeric' }), pad.l, H - 4);
+  ctx.fillText(last.toLocaleDateString([], { month: 'short', day: 'numeric' }), W - pad.r, H - 4);
+
+  // List view
+  const entries = $('historyEntries');
+  entries.innerHTML = hist.slice().reverse().slice(0, 30).map(h => {
+    const d = new Date(h.ts);
+    const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' +
+                    d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const parts = [];
+    if (h.all != null) parts.push(`All: ${h.all}%`);
+    if (h.son != null) parts.push(`Son: ${h.son}%`);
+    return `<div class="history-entry"><span>${dateStr}</span><span>${parts.join(' / ')}</span></div>`;
+  }).join('');
+}
+
+// History view toggle
+$('histChartBtn').addEventListener('click', () => {
+  $('histChartBtn').classList.add('active');
+  $('histListBtn').classList.remove('active');
+  $('historyCanvas').parentElement.style.display = '';
+  $('historyEntries').style.display = 'none';
+});
+$('histListBtn').addEventListener('click', () => {
+  $('histListBtn').classList.add('active');
+  $('histChartBtn').classList.remove('active');
+  $('historyCanvas').parentElement.style.display = 'none';
+  $('historyEntries').style.display = '';
+});
+
+// =============================================
+// ALERTS
+// =============================================
+function checkAlerts(allVal, sonVal, timePct) {
+  const threshold = parseInt($('alertThreshold').value) || 90;
+  const banner = $('alertBanner');
+  const warnings = [];
+
+  if (allVal != null && timePct > 0) {
+    const proj = (allVal / 100 / timePct) * 100;
+    if (proj > threshold) {
+      warnings.push(`All models projected at ${proj.toFixed(0)}%`);
+    }
+  }
+  if (sonVal != null && timePct > 0) {
+    const proj = (sonVal / 100 / timePct) * 100;
+    if (proj > threshold) {
+      warnings.push(`Sonnet projected at ${proj.toFixed(0)}%`);
+    }
+  }
+
+  if (warnings.length > 0) {
+    banner.textContent = 'Warning: ' + warnings.join(' / ') + ' by reset!';
+    banner.style.display = '';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// =============================================
+// EXPORT / IMPORT
+// =============================================
+$('exportBtn').addEventListener('click', () => {
+  const data = {
+    settings: JSON.parse(localStorage.getItem('willILast') || '{}'),
+    history: getHistory(),
+    theme: localStorage.getItem('willILast_theme') || 'dark',
+    _app: 'willILast',
+    _v: 2,
+  };
+  const textarea = $('exportTextarea');
+  textarea.style.display = '';
+  textarea.value = btoa(JSON.stringify(data));
+  textarea.select();
+  const msg = $('exportMsg');
+  msg.textContent = 'Copied! Paste this on your other device.';
+  msg.style.display = '';
+  try { navigator.clipboard.writeText(textarea.value); } catch {}
+  setTimeout(() => { msg.style.display = 'none'; }, 3000);
+});
+
+$('importBtn').addEventListener('click', () => {
+  const textarea = $('exportTextarea');
+  textarea.style.display = '';
+  textarea.value = '';
+  textarea.placeholder = 'Paste your exported string here, then tap Import again...';
+  textarea.focus();
+
+  // If there's already content, try to import
+  const handler = () => {
+    try {
+      const raw = textarea.value.trim();
+      if (!raw) return;
+      const data = JSON.parse(atob(raw));
+      if (data._app !== 'willILast') throw new Error('Invalid');
+
+      if (data.settings) localStorage.setItem('willILast', JSON.stringify(data.settings));
+      if (data.history) localStorage.setItem('willILast_history', JSON.stringify(data.history));
+      if (data.theme) localStorage.setItem('willILast_theme', data.theme);
+
+      load();
+      loadTheme();
+      update();
+      renderHistory();
+
+      const msg = $('exportMsg');
+      msg.textContent = 'Imported successfully!';
+      msg.style.color = 'var(--good)';
+      msg.style.display = '';
+      textarea.style.display = 'none';
+      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    } catch (e) {
+      const msg = $('exportMsg');
+      msg.textContent = 'Invalid import string. Try again.';
+      msg.style.color = 'var(--bad)';
+      msg.style.display = '';
+      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    }
+    textarea.removeEventListener('change', handler);
+  };
+
+  textarea.addEventListener('change', handler);
+  // Also trigger on second Import click
+  setTimeout(() => {
+    if (textarea.value.trim()) handler();
+  }, 100);
+});
+
+// =============================================
+// MAIN UPDATE
+// =============================================
 function update() {
   const { pct, elapsed, remaining, untilReset } = getTimePct();
 
@@ -572,9 +1381,9 @@ function update() {
   ring.style.stroke = pct < 0.5 ? 'var(--good)' : pct < 0.8 ? 'var(--warn)' : 'var(--bad)';
 
   $('timePct').textContent = (pct * 100).toFixed(1);
-  $('elapsed').textContent = fmtH(elapsed);
-  $('remaining').textContent = fmtH(remaining);
-  $('resetIn').textContent = fmtH(untilReset);
+  $('elapsed').textContent = fmtTime(elapsed);
+  $('remaining').textContent = fmtTime(remaining);
+  $('resetIn').textContent = fmtTime(untilReset);
 
   // Usage verdicts
   const allVal = parseFloat($('allModelsInput').value);
@@ -616,8 +1425,17 @@ function update() {
     $('paceSonnet').style.display = 'none';
   }
 
+  // Predictor
+  renderPredictor(hasAll ? allVal : null, hasSon ? sonVal : null, pct);
+
   // Suggestion
   updateSuggestion(hasAll ? allVal : null, hasSon ? sonVal : null, pct);
+
+  // Alerts
+  checkAlerts(hasAll ? allVal : null, hasSon ? sonVal : null, pct);
+
+  // History
+  renderHistory();
 }
 
 function renderPace(prefix, usagePctNum, timePct) {
@@ -669,15 +1487,26 @@ function updateSuggestion(allVal, sonVal, timePct) {
   txt.innerHTML = lines.join('<br>');
 }
 
-// ---- Events ----
+// =============================================
+// EVENTS
+// =============================================
 ['resetDay', 'resetTime'].forEach(id => {
   $(id).addEventListener('change', () => { save(); update(); });
 });
 ['allModelsInput', 'sonnetInput'].forEach(id => {
-  $(id).addEventListener('input', () => { save(); update(); });
+  $(id).addEventListener('input', () => {
+    save();
+    logUsage();
+    update();
+  });
 });
+$('trackHistory').addEventListener('change', save);
+$('alertThreshold').addEventListener('input', () => { save(); update(); });
 
-// ---- Init ----
+// =============================================
+// INIT
+// =============================================
+loadTheme();
 load();
 update();
 setInterval(update, 10000);
