@@ -43,7 +43,7 @@ It's that simple, but doing this math manually every time is annoying. So now yo
 
 Visit **[dan0dandeleon11.github.io/will-i-last](https://dan0dandeleon11.github.io/will-i-last/)** that's it. No install, no sign-up.
 
-On mobile, tap **Share â†’ Add to Home Screen** for quick access.
+On mobile, tap **Share > Add to Home Screen** for quick access.
 
 ### Transfer Between Devices
 
@@ -56,4 +56,5 @@ Because checking a datetime calculator for hours elapsed, then dividing by 168 o
 ## License
 
 MIT - do whatever you want with it.
+
 
