@@ -28,7 +28,7 @@ Claude tells you *what %* you've used - but not whether you're burning too fast 
 - **Daily budget calculator** - tells you exactly how much % per day you have left
 - Tracks both **All Models** and **Sonnet** limits separately
 - Configurable reset day/time (defaults to Thursday 10 PM)
-- **Zero tracking, zero data collection** â€” everything stays in your browser's localStorage
+- **Zero tracking, zero data collection** - everything stays in your browser's localStorage
 
 ## How It Works
 
@@ -47,7 +47,7 @@ On mobile, tap **Share > Add to Home Screen** for quick access.
 
 ### Transfer Between Devices
 
-Open **Settings â†’ Export Settings** on your first device, copy the string, then **Settings > Import Settings** on your second device and paste it. This transfers your reset schedule, alert thresholds, theme preference, and full usage history.
+Open **Settings > Export Settings** on your first device, copy the string, then **Settings > Import Settings** on your second device and paste it. This transfers your reset schedule, alert thresholds, theme preference, and full usage history.
 
 ## Why?
 
@@ -56,5 +56,6 @@ Because checking a datetime calculator for hours elapsed, then dividing by 168 o
 ## License
 
 MIT - do whatever you want with it.
+
 
 
