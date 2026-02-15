@@ -784,6 +784,8 @@
   <!-- Settings -->
   <details class="settings">
     <summary>Settings</summary>
+
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:0.5rem;margin-bottom:0.3rem;">All Models Reset</div>
     <div class="settings-grid">
       <div class="field">
         <label>Reset Day</label>
@@ -800,6 +802,31 @@
       <div class="field">
         <label>Reset Time</label>
         <input type="time" id="resetTime" value="22:00">
+      </div>
+    </div>
+
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:0.6rem;margin-bottom:0.3rem;">
+      Sonnet Reset
+      <label style="font-size:0.65rem;text-transform:none;margin-left:0.5rem;">
+        <input type="checkbox" id="sonnetSameReset" checked style="width:auto;margin-right:0.2rem;">Same as above
+      </label>
+    </div>
+    <div class="settings-grid" id="sonnetResetGrid" style="display:none;">
+      <div class="field">
+        <label>Reset Day</label>
+        <select id="sonnetResetDay">
+          <option value="0">Sunday</option>
+          <option value="1">Monday</option>
+          <option value="2">Tuesday</option>
+          <option value="3">Wednesday</option>
+          <option value="4" selected>Thursday</option>
+          <option value="5">Friday</option>
+          <option value="6">Saturday</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Reset Time</label>
+        <input type="time" id="sonnetResetTime" value="22:00">
       </div>
     </div>
 
@@ -883,6 +910,10 @@ function load() {
     if (!s) return;
     if (s.day != null) $('resetDay').value = s.day;
     if (s.time) $('resetTime').value = s.time;
+    if (s.sonnetSameReset != null) $('sonnetSameReset').checked = s.sonnetSameReset;
+    if (s.sonnetDay != null) $('sonnetResetDay').value = s.sonnetDay;
+    if (s.sonnetTime) $('sonnetResetTime').value = s.sonnetTime;
+    $('sonnetResetGrid').style.display = $('sonnetSameReset').checked ? 'none' : 'grid';
     if (s.allModels != null && s.allModels !== '') $('allModelsInput').value = s.allModels;
     if (s.sonnet != null && s.sonnet !== '') $('sonnetInput').value = s.sonnet;
     if (s.trackHistory != null) $('trackHistory').checked = s.trackHistory;
@@ -901,6 +932,9 @@ function save() {
   localStorage.setItem('willILast', JSON.stringify({
     day: $('resetDay').value,
     time: $('resetTime').value,
+    sonnetSameReset: $('sonnetSameReset').checked,
+    sonnetDay: $('sonnetResetDay').value,
+    sonnetTime: $('sonnetResetTime').value,
     allModels: $('allModelsInput').value,
     sonnet: $('sonnetInput').value,
     trackHistory: $('trackHistory').checked,
@@ -908,6 +942,13 @@ function save() {
     timeMode: timeMode,
   }));
 }
+
+// Sonnet same-reset toggle
+$('sonnetSameReset').addEventListener('change', () => {
+  $('sonnetResetGrid').style.display = $('sonnetSameReset').checked ? 'none' : 'grid';
+  save();
+  update();
+});
 
 // =============================================
 // HISTORY
@@ -951,10 +992,10 @@ $('clearHistoryBtn').addEventListener('click', () => {
 // =============================================
 // TIME MATH
 // =============================================
-function getTimePct() {
+function calcReset(dayVal, timeVal) {
   const now = new Date();
-  const resetDay = parseInt($('resetDay').value);
-  const [rh, rm] = $('resetTime').value.split(':').map(Number);
+  const resetDay = parseInt(dayVal);
+  const [rh, rm] = timeVal.split(':').map(Number);
 
   let d = new Date(now);
   d.setHours(rh, rm, 0, 0);
@@ -969,6 +1010,22 @@ function getTimePct() {
   const nextReset = new Date(d.getTime() + WEEK_MS);
 
   return { pct, elapsed, remaining: WEEK_MS - elapsed, nextReset, untilReset: nextReset - now, lastReset: d };
+}
+
+function getTimePctAll() {
+  return calcReset($('resetDay').value, $('resetTime').value);
+}
+
+function getTimePctSonnet() {
+  if ($('sonnetSameReset').checked) {
+    return getTimePctAll();
+  }
+  return calcReset($('sonnetResetDay').value, $('sonnetResetTime').value);
+}
+
+// For the main ring, show whichever has less time remaining (worst case)
+function getTimePct() {
+  return getTimePctAll();
 }
 
 function fmtTime(ms) {
@@ -1013,7 +1070,8 @@ function getVerdict(usagePct, timePct) {
 // =============================================
 // PREDICTOR CHART (Canvas)
 // =============================================
-function renderPredictor(allVal, sonVal, timePct) {
+function renderPredictor(allVal, sonVal, allTimePct, sonTimePct) {
+  const timePct = allTimePct; // for chart X axis (uses All Models timeline)
   const card = $('predictorCard');
   const canvas = $('predictorCanvas');
   const info = $('predictorInfo');
@@ -1134,7 +1192,7 @@ function renderPredictor(allVal, sonVal, timePct) {
   // Info text
   const lines = [];
   if (hasAll) {
-    const v = getVerdict(allVal / 100, timePct);
+    const v = getVerdict(allVal / 100, allTimePct);
     const proj = Math.min(v.proj, 999).toFixed(0);
     const hitDay = v.ratio > 0 ? (1 / v.ratio) * 7 : 999;
     if (v.ratio > 1) {
@@ -1144,7 +1202,7 @@ function renderPredictor(allVal, sonVal, timePct) {
     }
   }
   if (hasSon) {
-    const v = getVerdict(sonVal / 100, timePct);
+    const v = getVerdict(sonVal / 100, sonTimePct);
     const proj = Math.min(v.proj, 999).toFixed(0);
     const hitDay = v.ratio > 0 ? (1 / v.ratio) * 7 : 999;
     if (v.ratio > 1) {
@@ -1273,19 +1331,19 @@ $('histListBtn').addEventListener('click', () => {
 // =============================================
 // ALERTS
 // =============================================
-function checkAlerts(allVal, sonVal, timePct) {
+function checkAlerts(allVal, sonVal, allTimePct, sonTimePct) {
   const threshold = parseInt($('alertThreshold').value) || 90;
   const banner = $('alertBanner');
   const warnings = [];
 
-  if (allVal != null && timePct > 0) {
-    const proj = (allVal / 100 / timePct) * 100;
+  if (allVal != null && allTimePct > 0) {
+    const proj = (allVal / 100 / allTimePct) * 100;
     if (proj > threshold) {
       warnings.push(`All models projected at ${proj.toFixed(0)}%`);
     }
   }
-  if (sonVal != null && timePct > 0) {
-    const proj = (sonVal / 100 / timePct) * 100;
+  if (sonVal != null && sonTimePct > 0) {
+    const proj = (sonVal / 100 / sonTimePct) * 100;
     if (proj > threshold) {
       warnings.push(`Sonnet projected at ${proj.toFixed(0)}%`);
     }
@@ -1372,7 +1430,12 @@ $('importBtn').addEventListener('click', () => {
 // MAIN UPDATE
 // =============================================
 function update() {
-  const { pct, elapsed, remaining, untilReset } = getTimePct();
+  const allTime = getTimePctAll();
+  const sonTime = getTimePctSonnet();
+  // Ring shows All Models timing (primary)
+  const { pct, elapsed, remaining, untilReset } = allTime;
+  // Show earliest upcoming reset
+  const nextResetMs = Math.min(allTime.untilReset, sonTime.untilReset);
 
   // Ring
   const ring = $('ring');
@@ -1383,7 +1446,7 @@ function update() {
   $('timePct').textContent = (pct * 100).toFixed(1);
   $('elapsed').textContent = fmtTime(elapsed);
   $('remaining').textContent = fmtTime(remaining);
-  $('resetIn').textContent = fmtTime(untilReset);
+  $('resetIn').textContent = fmtTime(nextResetMs);
 
   // Usage verdicts
   const allVal = parseFloat($('allModelsInput').value);
@@ -1392,7 +1455,7 @@ function update() {
   const hasSon = !isNaN(sonVal);
 
   if (hasAll) {
-    const v = getVerdict(allVal / 100, pct);
+    const v = getVerdict(allVal / 100, allTime.pct);
     $('allModelsVerdict').textContent = v.text;
     $('allModelsVerdict').className = 'verdict ' + v.cls;
   } else {
@@ -1400,7 +1463,7 @@ function update() {
   }
 
   if (hasSon) {
-    const v = getVerdict(sonVal / 100, pct);
+    const v = getVerdict(sonVal / 100, sonTime.pct);
     $('sonnetVerdict').textContent = v.text;
     $('sonnetVerdict').className = 'verdict ' + v.cls;
   } else {
@@ -1413,26 +1476,26 @@ function update() {
 
   if (hasAll) {
     $('paceAllModels').style.display = '';
-    renderPace('paceAll', allVal, pct);
+    renderPace('paceAll', allVal, allTime.pct);
   } else {
     $('paceAllModels').style.display = 'none';
   }
 
   if (hasSon) {
     $('paceSonnet').style.display = '';
-    renderPace('paceSonnet', sonVal, pct);
+    renderPace('paceSonnet', sonVal, sonTime.pct);
   } else {
     $('paceSonnet').style.display = 'none';
   }
 
   // Predictor
-  renderPredictor(hasAll ? allVal : null, hasSon ? sonVal : null, pct);
+  renderPredictor(hasAll ? allVal : null, hasSon ? sonVal : null, allTime.pct, sonTime.pct);
 
   // Suggestion
-  updateSuggestion(hasAll ? allVal : null, hasSon ? sonVal : null, pct);
+  updateSuggestion(hasAll ? allVal : null, hasSon ? sonVal : null, allTime.pct, sonTime.pct);
 
   // Alerts
-  checkAlerts(hasAll ? allVal : null, hasSon ? sonVal : null, pct);
+  checkAlerts(hasAll ? allVal : null, hasSon ? sonVal : null, allTime.pct, sonTime.pct);
 
   // History
   renderHistory();
@@ -1458,7 +1521,7 @@ function renderPace(prefix, usagePctNum, timePct) {
   verdict.className = 'pace-verdict ' + v.cls;
 }
 
-function updateSuggestion(allVal, sonVal, timePct) {
+function updateSuggestion(allVal, sonVal, allTimePct, sonTimePct) {
   const box = $('suggestion');
   const txt = $('suggestionText');
 
@@ -1469,16 +1532,18 @@ function updateSuggestion(allVal, sonVal, timePct) {
 
   box.style.display = '';
   const lines = [];
-  const daysLeft = ((1 - timePct) * 7);
-  const daysLeftStr = daysLeft < 1 ? `${Math.round(daysLeft * 24)} hours` : `${daysLeft.toFixed(1)} days`;
 
   if (allVal != null) {
+    const daysLeft = ((1 - allTimePct) * 7);
+    const daysLeftStr = daysLeft < 1 ? `${Math.round(daysLeft * 24)} hours` : `${daysLeft.toFixed(1)} days`;
     const remainAll = 100 - allVal;
     const perDay = daysLeft > 0 ? (remainAll / daysLeft).toFixed(1) : 0;
     lines.push(`<span class="tip"><strong>All models:</strong> ${remainAll.toFixed(0)}% remaining over ${daysLeftStr} = <span class="highlight">${perDay}% per day</span></span>`);
   }
 
   if (sonVal != null) {
+    const daysLeft = ((1 - sonTimePct) * 7);
+    const daysLeftStr = daysLeft < 1 ? `${Math.round(daysLeft * 24)} hours` : `${daysLeft.toFixed(1)} days`;
     const remainSon = 100 - sonVal;
     const perDay = daysLeft > 0 ? (remainSon / daysLeft).toFixed(1) : 0;
     lines.push(`<span class="tip"><strong>Sonnet:</strong> ${remainSon.toFixed(0)}% remaining over ${daysLeftStr} = <span class="highlight">${perDay}% per day</span></span>`);
@@ -1490,7 +1555,7 @@ function updateSuggestion(allVal, sonVal, timePct) {
 // =============================================
 // EVENTS
 // =============================================
-['resetDay', 'resetTime'].forEach(id => {
+['resetDay', 'resetTime', 'sonnetResetDay', 'sonnetResetTime'].forEach(id => {
   $(id).addEventListener('change', () => { save(); update(); });
 });
 ['allModelsInput', 'sonnetInput'].forEach(id => {
