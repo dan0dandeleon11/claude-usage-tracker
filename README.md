@@ -14,15 +14,20 @@ Claude tells you *what %* you've used â€” but not whether you're burning to
    - Whether you're **ahead or behind pace** compared to where you should be
    - Your **projected usage** by week's end at your current rate
    - Exactly how much **% per day** you can safely spend for the rest of the week
+   - Which day you'll **hit 100%** if you keep going at this rate
 
 ## Features
 
+- **Pace comparison** â€” visual bars comparing your usage against elapsed time
+- **Pace predictor graph** â€” see your projected trajectory plotted on a chart with the ideal pace line
+- **Alert thresholds** â€” red warning banner when projected usage exceeds your set limit (default 90%)
+- **Usage history** â€” optional tracking of your entries over time with a chart and list view
+- **Dark & light mode** â€” toggle in the header, because night owls exist
+- **Hours / Days toggle** â€” switch between "47h 23m" and "1d 23h" for time displays
+- **Export / Import** â€” copy a base64 string to transfer all settings + history between devices
+- **Daily budget calculator** â€” tells you exactly how much % per day you have left
 - Tracks both **All Models** and **Sonnet** limits separately
-- Visual pace bars comparing your usage against elapsed time
-- Daily budget calculator so you know exactly how much room you have
 - Configurable reset day/time (defaults to Thursday 10 PM)
-- Saves your settings and last-entered values between visits
-- Works on desktop and mobile â€” add to home screen for app-like access
 - **Zero tracking, zero data collection** â€” everything stays in your browser's localStorage
 
 ## How It Works
@@ -39,6 +44,10 @@ It's that simple â€” but doing this math manually every time is annoying. S
 Visit **[dan0dandeleon11.github.io/will-i-last](https://dan0dandeleon11.github.io/will-i-last/)** â€” that's it. No install, no sign-up.
 
 On mobile, tap **Share â†’ Add to Home Screen** for quick access.
+
+### Transfer Between Devices
+
+Open **Settings â†’ Export Settings** on your first device, copy the string, then **Settings â†’ Import Settings** on your second device and paste it. This transfers your reset schedule, alert thresholds, theme preference, and full usage history.
 
 ## Why?
 
